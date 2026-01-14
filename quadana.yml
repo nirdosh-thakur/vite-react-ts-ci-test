@@ -1,0 +1,30 @@
+version: "1.0"
+
+profile:
+  name: qodana.recommended
+
+failThreshold: major
+
+exclude:
+  - name: All
+    paths:
+      - node_modules/**
+      - dist/**
+      - build/**
+      - coverage/**
+
+inspections:
+  # Disable very noisy inspections
+  - id: JSUnusedGlobalSymbols
+    enabled: false
+
+  - id: JSCheckFunctionSignatures
+    enabled: false
+
+  # Example: downgrade severity
+  - id: JSValidateTypes
+    severity: minor
+
+  # Enforce React best practices
+  - id: ReactHooksExhaustiveDeps
+    severity: major
