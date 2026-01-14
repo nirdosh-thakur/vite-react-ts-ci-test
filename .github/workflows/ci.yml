@@ -14,6 +14,7 @@ jobs:
   ci:
     name: Code Quality, Security & Build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       # -----------------------------
@@ -40,12 +41,20 @@ jobs:
         run: npm ci
 
       # -----------------------------
-      # 4. Secret scanning (Gitleaks)
+      # 4. Secret scanning (Gitleaks - working tree only)
       # -----------------------------
-      - name: Run Gitleaks (working tree only)
-        uses: gitleaks/gitleaks-action@v2
-        with:
-          args: detect --no-git --redact --exit-code 1
+      - name: Install Gitleaks
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz \
+          | tar -xz
+          sudo mv gitleaks /usr/local/bin/
+
+      - name: Run Gitleaks (no git history)
+        run: |
+          gitleaks detect \
+            --no-git \
+            --redact \
+            --exit-code 1
 
       # -----------------------------
       # 5. Dependency vulnerability scan
@@ -75,6 +84,8 @@ jobs:
   qodana:
     name: Qodana Local Scan (SARIF Upload)
     runs-on: ubuntu-latest
+    needs: ci
+    timeout-minutes: 15
 
     permissions:
       contents: read
