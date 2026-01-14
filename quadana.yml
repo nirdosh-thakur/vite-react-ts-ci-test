@@ -1,5 +1,7 @@
 version: "1.0"
 
+linter: jetbrains/qodana-js-community
+
 profile:
   name: qodana.recommended
 
@@ -13,18 +15,3 @@ exclude:
       - build/**
       - coverage/**
 
-inspections:
-  # Disable very noisy inspections
-  - id: JSUnusedGlobalSymbols
-    enabled: false
-
-  - id: JSCheckFunctionSignatures
-    enabled: false
-
-  # Example: downgrade severity
-  - id: JSValidateTypes
-    severity: minor
-
-  # Enforce React best practices
-  - id: ReactHooksExhaustiveDeps
-    severity: major
