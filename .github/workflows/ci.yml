@@ -1,9 +1,11 @@
-# 1. Gitleaks            → secrets
-# 2. OSV-Scanner         → dependency vulnerabilities
-# 3. npm audit           → npm advisory check
-# 4. ESLint              → code quality
-# 5. Build               → deployability
-# 6. Qodana              → deep static analysis
+# 1. Gitleaks            → secrets (fail fastest, zero cost)
+# 2. OSV-Scanner         → dependency vulnerabilities (supply chain)
+# 3. npm audit           → npm advisory DB (secondary SCA)
+# 4. Prettier            → formatting (cheap, deterministic)
+# 5. ESLint              → code quality / logic
+# 6. Unit Tests          → behavior validation (optional for now)
+# 7. Build               → deployability
+# 8. Qodana              → deep static analysis (separate job)
 
 
 name: Frontend CI Pipeline
@@ -25,33 +27,39 @@ jobs:
     timeout-minutes: 10
 
     steps:
-
-      # 1.1 Checkout source code
+      # -----------------------------
+      # 1. Checkout
+      # -----------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1 # 0 - History, 1 - Only Current commit
+          fetch-depth: 1
 
-      # 1.2 Setup Node.js
+      # -----------------------------
+      # 2. Node setup
+      # -----------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: "npm"
 
-      # 1.3 Install dependencies
+      # -----------------------------
+      # 3. Install dependencies
+      # -----------------------------
       - name: Install dependencies
         run: npm ci
 
-  
-
+      # -----------------------------
+      # 4. Gitleaks (secrets)
+      # -----------------------------
       - name: Cache Gitleaks binary
         uses: actions/cache@v4
         with:
           path: ~/.local/bin/gitleaks
           key: gitleaks-${{ runner.os }}-8.30.0
 
-      - name: Install Gitleaks (binary)
+      - name: Install Gitleaks
         run: |
           if [ ! -f "$HOME/.local/bin/gitleaks" ]; then
             mkdir -p ~/.local/bin
@@ -61,15 +69,12 @@ jobs:
             chmod +x ~/.local/bin/gitleaks
           fi
 
-      - name: Show Gitleaks Version
-        run: gitleaks version
-
-      - name: Run Gitleaks Scan (working tree only)
+      - name: Run Gitleaks Scan
         run: |
-          ~/.local/bin/gitleaks detect --no-git --redact --verbose --exit-code 1
+          ~/.local/bin/gitleaks detect --no-git --redact --exit-code 1
 
       # -----------------------------
-      # Dependency vulnerability scan (OSV)
+      # 5. Dependency vulnerabilities (OSV)
       # -----------------------------
       - name: Install OSV-Scanner
         run: |
@@ -81,48 +86,26 @@ jobs:
       - name: Scan dependencies with OSV-Scanner
         run: osv-scanner scan --lockfile=package-lock.json
 
-
       # -----------------------------
-      # npm audit (secondary check)
+      # 6. npm audit (secondary)
       # -----------------------------
-      - name: Run npm audit (high & critical only)
+      - name: Run npm audit
         run: npm audit --audit-level=high
 
-      # 3. ESLint (fast linting)
-      - name: Run ESLint (code quality inspector)
+      # -----------------------------
+      # 7. Prettier (format check)
+      # -----------------------------
+      - name: Run Prettier check
+        run: npm run format:check
+
+      # -----------------------------
+      # 8. ESLint (code quality)
+      # -----------------------------
+      - name: Run ESLint
         run: npm run lint
 
-      # 4. Unit Tests
-      #- name: Run unit tests
-      #  run: npm run test -- --run
-
-      # 5. Build validation
+      # -----------------------------
+      # 9. Build
+      # -----------------------------
       - name: Build project
         run: npm run build
-
-  # Job - 2 : Qodana
-  # qodana:
-  #   name: Qodana Local Scan (SARIF Upload)
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 15
-
-  #   permissions:
-  #     contents: read
-  #     security-events: write   # REQUIRED for Security tab
-
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 1
-
-  #     - name: Run Qodana (local scan)
-  #       uses: JetBrains/qodana-action@v2024.3
-  #       with:
-  #         upload-result: false
-  #         results-dir: qodana-results
-
-  #     - name: Upload Qodana SARIF to GitHub Security
-  #       uses: github/codeql-action/upload-sarif@v3
-  #       with:
-  #         sarif_file: qodana-results/qodana.sarif.json
