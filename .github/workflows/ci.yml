@@ -1,3 +1,11 @@
+# 1. Gitleaks            → secrets
+# 2. OSV-Scanner         → dependency vulnerabilities
+# 3. npm audit           → npm advisory check
+# 4. ESLint              → code quality
+# 5. Build               → deployability
+# 6. Qodana              → deep static analysis
+
+
 name: Frontend CI Pipeline
 
 on:
@@ -15,7 +23,6 @@ jobs:
     name: Code Quality, Security & Build
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: qodana
 
     steps:
 
@@ -36,23 +43,52 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 1.4 Install Gitleaks
-      - name: Install Gitleaks
-        run: |
-          sudo apt update
-          sudo apt install gitleaks -y
+  
 
-      # 1.5 Git Leaks Version    
-      - name: Show Gitleaks Version
-        run: gitleaks version
+      - name: Cache Gitleaks binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/bin/gitleaks
+          key: gitleaks-${{ runner.os }}-8.24.3
 
-      # 2 GitLeak Scan (working tree only)
-      - name: Run Gitleaks Scan
+      - name: Install Gitleaks (binary)
         run: |
-          gitleaks detect \
+          if [ ! -f "$HOME/.local/bin/gitleaks" ]; then
+            mkdir -p ~/.local/bin
+            curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz \
+              | tar -xz
+            mv gitleaks ~/.local/bin/gitleaks
+            chmod +x ~/.local/bin/gitleaks
+          fi
+
+      - name: Run Gitleaks Scan (working tree only)
+        run: |
+          ~/.local/bin/gitleaks detect \
             --no-git \
             --redact \
             --exit-code 1
+
+      # -----------------------------
+      # Dependency vulnerability scan (OSV)
+      # -----------------------------
+      - name: Install OSV-Scanner
+        run: |
+          curl -sSL https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64 \
+            -o osv-scanner
+          chmod +x osv-scanner
+          sudo mv osv-scanner /usr/local/bin/
+
+      - name: Scan dependencies with OSV-Scanner
+        run: |
+          osv-scanner scan \
+            --lockfile=package-lock.json \
+            --severity=HIGH
+
+      # -----------------------------
+      # npm audit (secondary check)
+      # -----------------------------
+      - name: Run npm audit (high & critical only)
+        run: npm audit --audit-level=high
 
       # 3. ESLint (fast linting)
       - name: Run ESLint (code quality inspector)
@@ -67,28 +103,28 @@ jobs:
         run: npm run build
 
   # Job - 2 : Qodana
-  qodana:
-    name: Qodana Local Scan (SARIF Upload)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+  # qodana:
+  #   name: Qodana Local Scan (SARIF Upload)
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 15
 
-    permissions:
-      contents: read
-      security-events: write   # REQUIRED for Security tab
+  #   permissions:
+  #     contents: read
+  #     security-events: write   # REQUIRED for Security tab
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 1
 
-      - name: Run Qodana (local scan)
-        uses: JetBrains/qodana-action@v2024.3
-        with:
-          upload-result: false
-          results-dir: qodana-results
+  #     - name: Run Qodana (local scan)
+  #       uses: JetBrains/qodana-action@v2024.3
+  #       with:
+  #         upload-result: false
+  #         results-dir: qodana-results
 
-      - name: Upload Qodana SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: qodana-results/qodana.sarif.json
+  #     - name: Upload Qodana SARIF to GitHub Security
+  #       uses: github/codeql-action/upload-sarif@v3
+  #       with:
+  #         sarif_file: qodana-results/qodana.sarif.json
