@@ -11,9 +11,11 @@ name: Frontend CI Pipeline
 
 on:
   push:
-    branches: ['main']
+    branches-ignore:
+      - dev
   pull_request:
-    branches: ['main']
+    branches-ignore:
+      - dev
 
 permissions:
   contents: read
@@ -69,8 +71,7 @@ jobs:
           fi
 
       - name: Run Gitleaks Scan
-        run: |
-          ~/.local/bin/gitleaks detect --no-git --redact --exit-code 1
+        run: ~/.local/bin/gitleaks detect --no-git --redact --exit-code 1
 
       # -----------------------------
       # 5. Dependency vulnerabilities (OSV)
