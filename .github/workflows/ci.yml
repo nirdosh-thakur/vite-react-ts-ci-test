@@ -17,48 +17,35 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      # -----------------------------
-      # 1. Checkout source code
-      # -----------------------------
+
+      # 1.1 Checkout source code
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1 # 0 - History, 1 - Only Current commit
 
-      # -----------------------------
-      # 2. Setup Node.js
-      # -----------------------------
+      # 1.2 Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: "npm"
 
-      # -----------------------------
-      # 3. Install dependencies
-      # -----------------------------
+      # 1.3 Install dependencies
       - name: Install dependencies
         run: npm ci
 
-      # -----------------------------
-      # 4. Secret scanning (Gitleaks - working tree only)
-      # -----------------------------
+      # 1.4 Install Gitleaks
       - name: Install Gitleaks
         run: |
-          curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz \
-          | tar -xz
-          sudo mv gitleaks /usr/local/bin/
+          curl -sSL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | sudo bash
 
-      - name: Run Gitleaks (no git history)
+      # 2. Secret Scanning (Gitleaks - working tree only)
+      - name: Run Gitleaks (working tree only)
         run: |
-          gitleaks detect \
-            --no-git \
-            --redact \
-            --exit-code 1
+          gitleaks detect --no-git --redact --exit-code 1
 
-      # -----------------------------
       # 5. Dependency vulnerability scan
-      # -----------------------------
       - name: Run npm audit (high & critical only)
         run: npm audit --audit-level=high
 
