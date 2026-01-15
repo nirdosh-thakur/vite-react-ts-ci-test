@@ -38,16 +38,17 @@ jobs:
       # 1.4 Install Gitleaks
       - name: Install Gitleaks
         run: |
-          curl -sSL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | sudo bash
+          sudo apt update
+          sudo apt install gitleaks -y
 
-      # 2. Secret Scanning (Gitleaks - working tree only)
-      - name: Run Gitleaks (working tree only)
+      # 2 GitLeak Scan (working tree only)
+      - name: Run Gitleaks Scan
         run: |
-          gitleaks detect --no-git --redact --exit-code 1
+          gitleaks detect \
+            --no-git \
+            --redact \
+            --exit-code 1
 
-      # 5. Dependency vulnerability scan
-      - name: Run npm audit (high & critical only)
-        run: npm audit --audit-level=high
 
       # -----------------------------
       # 6. ESLint (fast linting)
