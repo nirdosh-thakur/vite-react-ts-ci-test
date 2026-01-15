@@ -61,12 +61,12 @@ jobs:
             chmod +x ~/.local/bin/gitleaks
           fi
 
+      - name: Show Gitleaks Version
+        run: gitleaks version
+
       - name: Run Gitleaks Scan (working tree only)
         run: |
-          ~/.local/bin/gitleaks detect \
-            --no-git \
-            --redact \
-            --exit-code 1
+          ~/.local/bin/gitleaks detect --no-git --redact --exit-code 1
 
       # -----------------------------
       # Dependency vulnerability scan (OSV)
