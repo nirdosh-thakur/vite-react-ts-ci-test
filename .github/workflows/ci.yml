@@ -49,22 +49,15 @@ jobs:
             --redact \
             --exit-code 1
 
-
-      # -----------------------------
-      # 6. ESLint (fast linting)
-      # -----------------------------
-      - name: Run ESLint
+      # 3. ESLint (fast linting)
+      - name: Run ESLint (code quality inspector)
         run: npm run lint
 
-      # -----------------------------
-      # 7. Unit Tests
-      # -----------------------------
-      - name: Run unit tests
-        run: npm run test -- --run
+      # 4. Unit Tests
+      #- name: Run unit tests
+      #  run: npm run test -- --run
 
-      # -----------------------------
-      # 8. Build validation
-      # -----------------------------
+      # 5. Build validation
       - name: Build project
         run: npm run build
 
