@@ -79,10 +79,8 @@ jobs:
           sudo mv osv-scanner /usr/local/bin/
 
       - name: Scan dependencies with OSV-Scanner
-        run: |
-          osv-scanner scan \
-            --lockfile=package-lock.json \
-            --severity=HIGH
+        run: osv-scanner scan --lockfile=package-lock.json
+
 
       # -----------------------------
       # npm audit (secondary check)
