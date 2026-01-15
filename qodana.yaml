@@ -1,7 +1,6 @@
-version: "1.0"
+version: '1.0'
 
 linter: ghcr.io/jetbrains/qodana-js-community:2024.3
-
 
 profile:
   name: qodana.recommended

@@ -1,5 +1,5 @@
 function App() {
-  return <h1>CI Test Project</h1>
+  return <h1>CI Test Project</h1>;
 }
 
-export default App
+export default App;
