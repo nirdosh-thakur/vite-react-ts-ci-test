@@ -15,6 +15,7 @@ jobs:
     name: Code Quality, Security & Build
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    needs: qodana
 
     steps:
 
@@ -69,7 +70,6 @@ jobs:
   qodana:
     name: Qodana Local Scan (SARIF Upload)
     runs-on: ubuntu-latest
-    needs: ci
     timeout-minutes: 15
 
     permissions:
