@@ -5,7 +5,7 @@ linter: jetbrains/qodana-js-community:latest
 profile:
   name: qodana.recommended
 
-failThreshold: major
+failThreshold: 0
 
 exclude:
   - name: All
