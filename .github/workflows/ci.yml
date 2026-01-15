@@ -49,13 +49,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/bin/gitleaks
-          key: gitleaks-${{ runner.os }}-8.24.3
+          key: gitleaks-${{ runner.os }}-8.30.0
 
       - name: Install Gitleaks (binary)
         run: |
           if [ ! -f "$HOME/.local/bin/gitleaks" ]; then
             mkdir -p ~/.local/bin
-            curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz \
+            curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.30.0_linux_x64.tar.gz \
               | tar -xz
             mv gitleaks ~/.local/bin/gitleaks
             chmod +x ~/.local/bin/gitleaks
@@ -66,7 +66,7 @@ jobs:
 
       - name: Run Gitleaks Scan (working tree only)
         run: |
-          ~/.local/bin/gitleaks detect --no-git --redact --exit-code 1
+          ~/.local/bin/gitleaks detect --no-git --redact --verbose --exit-code 1
 
       # -----------------------------
       # Dependency vulnerability scan (OSV)
